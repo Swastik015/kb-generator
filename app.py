@@ -159,11 +159,9 @@ with col_left:
         </div>
         """, unsafe_allow_html=True)
 
-        # save uploaded file
         with open("tickets_upload.csv", "wb") as f:
             f.write(uploaded.getbuffer())
 
-        # preview
         with st.expander("Preview data"):
             st.dataframe(
                 df[["ticket_id","title","category","subcategory","status"]].head(8),
@@ -190,7 +188,6 @@ with col_right:
     if run_button or use_sample:
         csv_path = "tickets_upload.csv" if (uploaded and not use_sample) else "tickets.csv"
 
-        # run pipeline with live progress
         progress = st.progress(0, text="Starting pipeline...")
         log_area = st.empty()
         logs     = []
@@ -248,10 +245,8 @@ with col_right:
             progress.empty()
             log_area.empty()
 
-            # ── results display ────────────────────────────
             st.success(f"✅ Pipeline complete — {len(results)} articles generated and emailed")
 
-            # summary metrics
             m1, m2, m3, m4 = st.columns(4)
             avg_conf = round(sum(r['confidence_score'] for r in results) / len(results))
             avg_defl = round(sum(r['estimated_deflection_pct'] for r in results) / len(results))
@@ -264,7 +259,6 @@ with col_right:
 
             st.markdown("---")
 
-            # per cluster cards
             for r in results:
                 color = "#22c55e" if r['confidence_score'] >= 80 else \
                         "#f59e0b" if r['confidence_score'] >= 60 else "#ef4444"
@@ -295,7 +289,6 @@ with col_right:
                 </div>
                 """, unsafe_allow_html=True)
 
-                # flags
                 if r.get("flags"):
                     with st.expander(f"⚠️  {len(r['flags'])} flag(s) — {r['cluster_id']}"):
                         for flag in r["flags"]:
@@ -305,7 +298,6 @@ with col_right:
                             </div>
                             """, unsafe_allow_html=True)
 
-                # article preview
                 with st.expander(f"📄  Article preview — {r['topic']}"):
                     st.markdown(r["article_content"])
 
@@ -326,7 +318,6 @@ with col_right:
             st.exception(e)
 
     else:
-        # empty state
         st.markdown("""
         <div style='text-align:center;padding:60px 20px;color:#1e2333'>
           <div style='font-size:48px;margin-bottom:16px'>🧠</div>
