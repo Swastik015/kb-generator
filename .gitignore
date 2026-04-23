@@ -1,0 +1,23 @@
+# secrets — never commit
+.env
+
+# virtual environment — too large
+.venv/
+
+# auto-generated data — no need to track
+data/
+outputs/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# debug scripts
+debug_eps.py
+test_email.py
+tune_eps.py
