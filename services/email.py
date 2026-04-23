@@ -125,7 +125,7 @@ Article:
         smtp.starttls()
         smtp.login(MAILTRAP_USER, MAILTRAP_PASSWORD)
         smtp.sendmail(GMAIL_USER, KM_EMAIL, msg.as_string())
-
+    time.sleep(2)
     print(f"[Email] ✓ Sent successfully")
     print(f"[Email]   Check: https://mailtrap.io/inboxes")
     print(f"[Email]   Subject: {msg['Subject']}")
