@@ -1,9 +1,8 @@
 import time
-import smtplib
 import json
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from config import GMAIL_USER, MAILTRAP_USER, MAILTRAP_PASSWORD, KM_EMAIL
+import urllib.request
+import urllib.error
+from config import GMAIL_USER, MAILTRAP_API_TOKEN, KM_EMAIL
 
 
 def _build_html(package: dict) -> str:
@@ -30,7 +29,6 @@ def _build_html(package: dict) -> str:
                   text-transform:uppercase;margin:0 0 6px'>KB Draft Ready for Review</p>
         <h1 style='color:#fff;font-size:22px;margin:0'>{package['topic']}</h1>
       </div>
-
       <div style='background:#f0f7ff;padding:16px 32px;border:1px solid #bfdbfe'>
         <table style='width:100%'><tr>
           <td><p style='font-size:11px;color:#6b7280;margin:0'>CATEGORY</p>
@@ -50,7 +48,6 @@ def _build_html(package: dict) -> str:
                 {package['avg_resolution_hrs']} hrs</p></td>
         </tr></table>
       </div>
-
       <div style='padding:24px 32px;border:1px solid #e5e7eb;border-top:none'>
         <h2 style='font-size:15px;color:#1e3a5f;margin:0 0 16px'>Draft KB Article</h2>
         <div style='background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;
@@ -58,9 +55,7 @@ def _build_html(package: dict) -> str:
           {article_html}
         </div>
       </div>
-
-      <div style='padding:16px 32px;background:#f0fdf4;border:1px solid #bbf7d0;
-                  border-top:none'>
+      <div style='padding:16px 32px;background:#f0fdf4;border:1px solid #bbf7d0;border-top:none'>
         <h2 style='font-size:13px;color:#065f46;margin:0 0 8px;
                    text-transform:uppercase;letter-spacing:2px'>Suggested SME Reviewer</h2>
         <p style='font-size:15px;font-weight:600;color:#065f46;margin:0'>
@@ -68,7 +63,6 @@ def _build_html(package: dict) -> str:
           <span style='font-weight:400;color:#6b7280'>({package['sme_team']})</span>
         </p>
       </div>
-
       <div style='padding:16px 32px;border:1px solid #e5e7eb;border-top:none'>
         <h2 style='font-size:13px;color:#7f1d1d;margin:0 0 8px;
                    text-transform:uppercase;letter-spacing:2px'>
@@ -79,7 +73,6 @@ def _build_html(package: dict) -> str:
           {package.get('deflection_reasoning', '')}
         </p>
       </div>
-
       <div style='padding:16px 32px;background:#f9fafb;border:1px solid #e5e7eb;
                   border-top:none;border-radius:0 0 8px 8px'>
         <h2 style='font-size:13px;color:#374151;margin:0 0 8px;
@@ -92,17 +85,14 @@ def _build_html(package: dict) -> str:
 
 
 def send(package: dict):
-    """Send ReviewPackage as formatted HTML email via Mailtrap."""
+    """Send ReviewPackage via Mailtrap HTTP API — works on Streamlit Cloud."""
     print(f"\n[Email] Sending draft for: {package['topic']} ...")
 
-    msg            = MIMEMultipart("alternative")
-    msg["Subject"] = (
+    subject = (
         f"[KB Draft] {package['topic']} · "
         f"Confidence {package['confidence_score']}/100 · "
         f"~{package['estimated_deflection_pct']}% deflection"
     )
-    msg["From"]    = GMAIL_USER
-    msg["To"]      = KM_EMAIL
 
     plain = f"""
 KB Draft: {package['topic']}
@@ -118,29 +108,43 @@ Article:
 {package['article_content']}
     """.strip()
 
-    msg.attach(MIMEText(plain, "plain"))
-    msg.attach(MIMEText(_build_html(package), "html"))
+    payload = json.dumps({
+        "from":    {"email": GMAIL_USER,  "name": "KB Generator"},
+        "to":      [{"email": KM_EMAIL}],
+        "subject": subject,
+        "text":    plain,
+        "html":    _build_html(package)
+    }).encode("utf-8")
 
-    with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as smtp:
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.login(MAILTRAP_USER, MAILTRAP_PASSWORD)
-        smtp.sendmail(GMAIL_USER, KM_EMAIL, msg.as_string())
-    time.sleep(2)
-    print(f"[Email] ✓ Sent successfully")
-    print(f"[Email]   Check: https://mailtrap.io/inboxes")
-    print(f"[Email]   Subject: {msg['Subject']}")
+    req = urllib.request.Request(
+        url     = "https://sandbox.api.mailtrap.io/api/send/inbox",
+        data    = payload,
+        headers = {
+            "Content-Type": "application/json",
+            "Api-Token":    MAILTRAP_API_TOKEN
+        },
+        method  = "POST"
+    )
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"[Email] ✓ Sent — id: {result.get('message_ids', ['?'])[0]}")
+            print(f"[Email]   Check: https://mailtrap.io/inboxes")
+            print(f"[Email]   Subject: {subject}")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        raise RuntimeError(f"Mailtrap API error {e.code}: {body}")
+
+    time.sleep(1)
 
 
 if __name__ == "__main__":
     import os
     from config import OUTPUT_DIR
-
     review_path = os.path.join(OUTPUT_DIR, "review_CLU-00_vpn.json")
     if not os.path.exists(review_path):
         raise FileNotFoundError("Run agent3_review.py first.")
-
     with open(review_path) as f:
         package = json.load(f)
-
     send(package)
