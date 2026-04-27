@@ -26,17 +26,15 @@ DBSCAN_MIN_SAMPLES  = int(os.getenv("DBSCAN_MIN_SAMPLES", "2"))
 
 # ── Email ────────────────────────────────────────────────────
 GMAIL_USER          = os.getenv("GMAIL_USER")
-MAILTRAP_USER       = os.getenv("MAILTRAP_USER")
-MAILTRAP_PASSWORD   = os.getenv("MAILTRAP_PASSWORD")
+MAILTRAP_API_TOKEN  = os.getenv("MAILTRAP_API_TOKEN")
 KM_EMAIL            = os.getenv("KM_EMAIL", GMAIL_USER)
 
 
 # ── Validation ───────────────────────────────────────────────
 def validate():
     missing = []
-    if not OPENAI_API_KEY:    missing.append("OPENAI_API_KEY")
-    if not MAILTRAP_USER:     missing.append("MAILTRAP_USER")
-    if not MAILTRAP_PASSWORD: missing.append("MAILTRAP_PASSWORD")
+    if not OPENAI_API_KEY:   missing.append("OPENAI_API_KEY")
+    if not MAILTRAP_API_TOKEN: missing.append("MAILTRAP_API_TOKEN")
     if missing:
         raise EnvironmentError(f"Missing .env variables: {missing}")
 
@@ -51,5 +49,4 @@ if __name__ == "__main__":
     print(f"  RAG top-K       : {TOP_K_RAG}")
     print(f"  DBSCAN eps      : {DBSCAN_EPS}")
     print(f"  DBSCAN min_samp : {DBSCAN_MIN_SAMPLES}")
-    print(f"  Mailtrap user   : {MAILTRAP_USER}")
     print(f"  KM email        : {KM_EMAIL}")
