@@ -121,7 +121,7 @@ Article:
     msg.attach(MIMEText(plain, "plain"))
     msg.attach(MIMEText(_build_html(package), "html"))
 
-    with smtplib.SMTP("sandbox.smtp.mailtrap.io", 587) as smtp:
+    with smtplib.SMTP("sandbox.smtp.mailtrap.io", 2525) as smtp:
         smtp.ehlo()
         smtp.starttls()
         smtp.login(MAILTRAP_USER, MAILTRAP_PASSWORD)
