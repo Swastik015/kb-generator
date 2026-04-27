@@ -5,7 +5,7 @@ load_dotenv()
 
 # ── LLM ─────────────────────────────────────────────────────
 OPENAI_API_KEY      = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL        = os.getenv("OPENAI_MODEL",   "gpt-4o-mini")
+OPENAI_MODEL        = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 # ── Paths ────────────────────────────────────────────────────
 CSV_PATH            = os.getenv("CSV_PATH",    "tickets.csv")
@@ -24,29 +24,17 @@ TOP_K_RAG           = int(os.getenv("TOP_K_RAG",         "5"))
 DBSCAN_EPS          = float(os.getenv("DBSCAN_EPS",       "0.60"))
 DBSCAN_MIN_SAMPLES  = int(os.getenv("DBSCAN_MIN_SAMPLES", "2"))
 
-# ── Email ────────────────────────────────────────────────────
-GMAIL_USER          = os.getenv("GMAIL_USER")
-MAILTRAP_API_TOKEN  = os.getenv("MAILTRAP_API_TOKEN")
-KM_EMAIL            = os.getenv("KM_EMAIL", GMAIL_USER)
-
-
-# ── Validation ───────────────────────────────────────────────
-def validate():
-    missing = []
-    if not OPENAI_API_KEY:   missing.append("OPENAI_API_KEY")
-    if not MAILTRAP_API_TOKEN: missing.append("MAILTRAP_API_TOKEN")
-    if missing:
-        raise EnvironmentError(f"Missing .env variables: {missing}")
+# ── Email — SendGrid ─────────────────────────────────────────
+SENDGRID_API_KEY    = os.getenv("SENDGRID_API_KEY")
+SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "testingagenticaidemo@gmail.com")
+KM_EMAIL            = os.getenv("KM_EMAIL",            "testingagenticaidemo@gmail.com")
 
 
 if __name__ == "__main__":
-    validate()
-    print("✓ All environment variables loaded")
-    print(f"  OpenAI model    : {OPENAI_MODEL}")
-    print(f"  Embed model     : {EMBED_MODEL}")
-    print(f"  CSV path        : {CSV_PATH}")
-    print(f"  Threshold       : {CLUSTER_THRESHOLD}")
-    print(f"  RAG top-K       : {TOP_K_RAG}")
-    print(f"  DBSCAN eps      : {DBSCAN_EPS}")
-    print(f"  DBSCAN min_samp : {DBSCAN_MIN_SAMPLES}")
-    print(f"  KM email        : {KM_EMAIL}")
+    print("✓ Config loaded")
+    print(f"  OpenAI model      : {OPENAI_MODEL}")
+    print(f"  Embed model       : {EMBED_MODEL}")
+    print(f"  Threshold         : {CLUSTER_THRESHOLD}")
+    print(f"  DBSCAN eps        : {DBSCAN_EPS}")
+    print(f"  SendGrid from     : {SENDGRID_FROM_EMAIL}")
+    print(f"  KM email          : {KM_EMAIL}")
